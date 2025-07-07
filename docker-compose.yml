@@ -1,0 +1,50 @@
+services:
+  gcpcloudops:
+    image: gcpcloudops
+    container_name: gcpcloudops
+    depends_on:
+      - postgresql
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${APP_PORT}:${CONTAINER_PORT}"
+    networks:
+      - default
+    healthcheck:
+      test: [ "CMD", "curl", "--fail", "http://localhost:${CONTAINER_PORT}/healthcheck" ]
+      interval: 60s
+      retries: 5
+      start_period: 20s
+      timeout: 10s
+
+  postgresql:
+    image: "postgres:alpine3.19"
+    container_name: "gcpcloudops-postgresql"
+    env_file:
+      - .env
+    environment:
+      - "POSTGRES_USER=${DATABASE_USER}"
+      - "POSTGRES_PASSWORD=${DATABASE_PASSWORD}"
+      - "POSTGRES_DB=${DATABASE_NAME}"
+    volumes:
+      - postgresql:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - default
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME} -h localhost -p 5432" ]
+      start_period: 5s
+      interval: 10s
+      timeout: 5s
+
+networks:
+  default:
+    name: "gcpcloudops-networks"
+    driver: bridge
+
+volumes:
+  postgresql:
+    name: "gcpcloudops-postgresql"
