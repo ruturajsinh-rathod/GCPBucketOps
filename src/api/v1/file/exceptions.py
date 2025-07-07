@@ -1,8 +1,13 @@
 from fastapi import status
 
 from src import constants
-from src.core.exceptions import AlreadyExistsError, NotFoundError, UnauthorizedError, CustomException, \
-    ServiceUnavailable
+from src.core.exceptions import (
+    AlreadyExistsError,
+    CustomException,
+    NotFoundError,
+    ServiceUnavailable,
+    UnauthorizedError,
+)
 
 
 class InvalidCredsException(UnauthorizedError):
@@ -28,12 +33,14 @@ class GCSFileExistsException(AlreadyExistsError):
 class DBFileExistsException(AlreadyExistsError):
     message = constants.DB_FILE_EXISTS
 
+
 class GCSFileDoesNotExistsException(NotFoundError):
     message = constants.GCS_FILE_NOT_FOUND
 
 
 class DBFileDoesNotExistsException(NotFoundError):
     message = constants.DB_FILE_NOT_FOUND
+
 
 class GCSUploadException(ServiceUnavailable):
     message = constants.GCS_UPLOAD_EXCEPTION

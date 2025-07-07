@@ -2,14 +2,15 @@ import asyncio
 from datetime import datetime, timezone
 from typing import Annotated
 
+from fastapi import Depends
+from google.cloud import storage
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import Depends
+
 from database.db import db_session, get_session
 from src.api import FileModel
 from src.api.v1.file.enums import FileStatusEnum
-from src.core.gcs import SERVICE_ACCOUNT_FILE, BUCKET_NAME
-from google.cloud import storage
+from src.core.gcs import BUCKET_NAME, SERVICE_ACCOUNT_FILE
 from src.core.utils import background_logger
 
 
@@ -26,17 +27,17 @@ class Scheduler:
 
     async def delete_old_files(self) -> None:
         """
-                Deletes expired files from Google Cloud Storage (GCS) and marks them as deleted in the database.
+        Deletes expired files from Google Cloud Storage (GCS) and marks them as deleted in the database.
 
-                This method performs the following steps:
-                - Queries the database for files where `expires_at` is in the past and `deleted_at` is null.
-                - Iterates over the list of expired files.
-                - Deletes each corresponding file from the configured GCS bucket.
+        This method performs the following steps:
+        - Queries the database for files where `expires_at` is in the past and `deleted_at` is null.
+        - Iterates over the list of expired files.
+        - Deletes each corresponding file from the configured GCS bucket.
 
-                Any exceptions during the deletion process are logged using the background logger.
+        Any exceptions during the deletion process are logged using the background logger.
 
-                Returns:
-                    None
+        Returns:
+            None
         """
 
         try:
@@ -44,10 +45,11 @@ class Scheduler:
             bucket = client.bucket(BUCKET_NAME)
 
             files = await self.session.scalars(
-                select(FileModel.file_name)
-                .where(FileModel.expires_at < datetime.now(timezone.utc).replace(tzinfo=None),
-                                                  FileModel.deleted_at.is_(None)
-                                                  )
+                select(FileModel.file_name).where(
+                    FileModel.expires_at
+                    < datetime.now(timezone.utc).replace(tzinfo=None),
+                    FileModel.deleted_at.is_(None),
+                )
             )
 
             files = files.all()
@@ -57,13 +59,17 @@ class Scheduler:
                 if blob.exists():
                     blob.delete()
                 else:
-                    background_logger.warning(f"{file} is not found in GCS but exists in our db.")
+                    background_logger.warning(
+                        f"{file} is not found in GCS but exists in our db."
+                    )
                 file.status = FileStatusEnum.DELETED
                 file.deleted_at = datetime.now(timezone.utc).replace(tzinfo=None)
 
             return
         except Exception as exc:
-            background_logger.error(f"An error occurred when deleting expired files from GCS: {exc}")
+            background_logger.error(
+                f"An error occurred when deleting expired files from GCS: {exc}"
+            )
 
 
 async def periodic_cleanup():

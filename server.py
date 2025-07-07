@@ -75,7 +75,7 @@ def create_app(debug: bool = False) -> FastAPI:
         version=app_settings.APP_VERSION,
         docs_url="/docs",
         redoc_url="/redoc" if debug else None,
-        lifespan=lifespan
+        lifespan=lifespan,
     )
     init_routers(_app)
     root_health_path(_app)

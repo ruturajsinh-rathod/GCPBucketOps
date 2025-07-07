@@ -38,9 +38,4 @@ def setup_logger(name: str) -> logging.Logger:
 core_logger = setup_logger("core_logger")
 background_logger = setup_logger("background_logger")
 
-__all__ = [
-    "BaseResponse",
-    "CamelCaseModel",
-    "core_logger",
-    "background_logger"
-]
+__all__ = ["BaseResponse", "CamelCaseModel", "core_logger", "background_logger"]

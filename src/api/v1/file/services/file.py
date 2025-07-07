@@ -1,4 +1,4 @@
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
 from fastapi import Depends, UploadFile
@@ -8,11 +8,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from config.config import gcs_settings
 from database.db import db_session
 from src.api.v1.file.enums import FileStatusEnum
-from src.api.v1.file.exceptions import GCSFileExistsException, GCSUploadException, GCSFileDoesNotExistsException, \
-    GCSRemoveException, DBFileExistsException, DBFileDoesNotExistsException, GenerateURLException
+from src.api.v1.file.exceptions import (
+    DBFileDoesNotExistsException,
+    DBFileExistsException,
+    GCSFileDoesNotExistsException,
+    GCSFileExistsException,
+    GCSRemoveException,
+    GCSUploadException,
+    GenerateURLException,
+)
 from src.api.v1.file.models.file import FileModel
 from src.api.v1.file.schemas import GenerateURLResponse
-from src.core.gcs import upload_to_gcs, BUCKET_NAME, client
+from src.core.gcs import BUCKET_NAME, client, upload_to_gcs
 from src.core.utils import core_logger
 
 
@@ -40,25 +47,25 @@ class FileService:
 
     async def upload(self, file: UploadFile) -> FileModel:
         """
-                Upload a file to GCS and create a corresponding record in the database.
+        Upload a file to GCS and create a corresponding record in the database.
 
-                Steps:
-                - Checks if the file already exists in GCS.
-                - Checks if the file record already exists in the database.
-                - Uploads the file to GCS.
-                - Creates a database record for the file.
+        Steps:
+        - Checks if the file already exists in GCS.
+        - Checks if the file record already exists in the database.
+        - Uploads the file to GCS.
+        - Creates a database record for the file.
 
-                Args:
-                    file (UploadFile): The file to be uploaded.
+        Args:
+            file (UploadFile): The file to be uploaded.
 
-                Returns:
-                    FileModel: The created file record.
+        Returns:
+            FileModel: The created file record.
 
-                Raises:
-                    GCSFileExistsException: If the file already exists in GCS.
-                    DBFileExistsException: If the file record already exists in the database.
-                    GCSUploadException: For any unexpected upload failures.
-                """
+        Raises:
+            GCSFileExistsException: If the file already exists in GCS.
+            DBFileExistsException: If the file record already exists in the database.
+            GCSUploadException: For any unexpected upload failures.
+        """
 
         try:
             # Check if file exists in GCS
@@ -71,12 +78,14 @@ class FileService:
                 select(FileModel).where(
                     FileModel.file_name == file.filename,
                     FileModel.deleted_at.is_(None),
-                    FileModel.bucket_name == BUCKET_NAME
+                    FileModel.bucket_name == BUCKET_NAME,
                 )
             )
 
             if file_obj:
-                core_logger.warning(f"File record '{file.filename}' already exists in the database.")
+                core_logger.warning(
+                    f"File record '{file.filename}' already exists in the database."
+                )
                 raise DBFileExistsException
 
             # Upload to GCS
@@ -98,33 +107,35 @@ class FileService:
 
             return file_obj
 
-        except (GCSFileExistsException,  DBFileExistsException):
+        except (GCSFileExistsException, DBFileExistsException):
             raise
 
         except Exception as exc:
-            core_logger.critical(f"Unexpected error while uploading file '{file.filename}': {exc}")
+            core_logger.critical(
+                f"Unexpected error while uploading file '{file.filename}': {exc}"
+            )
             raise GCSUploadException
 
     async def delete(self, file_name: str) -> dict[str, str]:
         """
-               Delete a file from GCS and mark it as deleted in the database.
+        Delete a file from GCS and mark it as deleted in the database.
 
-               Steps:
-               - Verifies the file exists in GCS.
-               - Deletes the file from GCS.
-               - Marks the corresponding file record as deleted in the database.
+        Steps:
+        - Verifies the file exists in GCS.
+        - Deletes the file from GCS.
+        - Marks the corresponding file record as deleted in the database.
 
-               Args:
-                   file_name (str): The name of the file to delete.
+        Args:
+            file_name (str): The name of the file to delete.
 
-               Returns:
-                   dict[str, str]: Success message.
+        Returns:
+            dict[str, str]: Success message.
 
-               Raises:
-                   GCSFileDoesNotExistsException: If the file does not exist in GCS.
-                   DBFileDoesNotExistsException: If the file record does not exist in the database.
-                   ServiceUnavailable: For unexpected failures during deletion.
-               """
+        Raises:
+            GCSFileDoesNotExistsException: If the file does not exist in GCS.
+            DBFileDoesNotExistsException: If the file record does not exist in the database.
+            ServiceUnavailable: For unexpected failures during deletion.
+        """
 
         try:
             bucket = client.bucket(BUCKET_NAME)
@@ -141,14 +152,16 @@ class FileService:
                 select(FileModel).where(
                     FileModel.file_name == file_name,
                     FileModel.deleted_at.is_(None),
-                    FileModel.bucket_name == BUCKET_NAME
+                    FileModel.bucket_name == BUCKET_NAME,
                 )
             )
 
             if file:
                 file.status = FileStatusEnum.DELETED
                 file.deleted_at = datetime.now(timezone.utc).replace(tzinfo=None)
-                core_logger.info(f"File record for '{file_name}' marked as deleted in DB.")
+                core_logger.info(
+                    f"File record for '{file_name}' marked as deleted in DB."
+                )
             else:
                 core_logger.warning(f"File record '{file_name}' does not exist in DB.")
                 raise DBFileDoesNotExistsException
@@ -159,22 +172,24 @@ class FileService:
             raise
 
         except Exception as exc:
-            core_logger.critical(f"Failed to remove file '{file_name}' from GCS or DB: {exc}")
+            core_logger.critical(
+                f"Failed to remove file '{file_name}' from GCS or DB: {exc}"
+            )
             raise GCSRemoveException
 
     async def generate_url(self, file_name: str) -> GenerateURLResponse:
         """
-               Generate a pre-signed, temporary download URL for a file stored in GCS.
+        Generate a pre-signed, temporary download URL for a file stored in GCS.
 
-               Args:
-                   file_name (str): The name of the file to generate the URL for.
+        Args:
+            file_name (str): The name of the file to generate the URL for.
 
-               Returns:
-                   GenerateURLResponse: The generated signed URL and its validity duration.
+        Returns:
+            GenerateURLResponse: The generated signed URL and its validity duration.
 
-               Raises:
-                   GCSFileDoesNotExistsException: If the file does not exist in GCS.
-               """
+        Raises:
+            GCSFileDoesNotExistsException: If the file does not exist in GCS.
+        """
 
         try:
             bucket = client.bucket(BUCKET_NAME)
@@ -188,12 +203,11 @@ class FileService:
             url = blob.generate_signed_url(
                 version="v4",
                 expiration=timedelta(seconds=gcs_settings.EXPIRATION_SECONDS),
-                method="GET"
+                method="GET",
             )
 
             return GenerateURLResponse(
-                download_url=url,
-                valid_for_seconds=gcs_settings.EXPIRATION_SECONDS
+                download_url=url, valid_for_seconds=gcs_settings.EXPIRATION_SECONDS
             )
         except Exception as exc:
             core_logger.critical(f"Failed to generate url for '{file_name}': {exc}")

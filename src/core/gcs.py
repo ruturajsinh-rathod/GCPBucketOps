@@ -8,20 +8,21 @@ BUCKET_NAME = gcs_settings.BUCKET_NAME
 
 client = storage.Client.from_service_account_json(SERVICE_ACCOUNT_FILE)
 
+
 def upload_to_gcs(file_data, destination_blob_name):
     """
-        Uploads a file to Google Cloud Storage.
+    Uploads a file to Google Cloud Storage.
 
-        Args:
-            file_data: A file-like object to upload (e.g., UploadFile.file).
-            destination_blob_name (str): The desired path/name for the file in the GCS bucket.
+    Args:
+        file_data: A file-like object to upload (e.g., UploadFile.file).
+        destination_blob_name (str): The desired path/name for the file in the GCS bucket.
 
-        Returns:
-            str: The GCS URI of the uploaded file (e.g., gs://bucket_name/file_name).
+    Returns:
+        str: The GCS URI of the uploaded file (e.g., gs://bucket_name/file_name).
 
-        Raises:
-            Exception: Logs a critical error and propagates the exception if upload fails.
-        """
+    Raises:
+        Exception: Logs a critical error and propagates the exception if upload fails.
+    """
 
     try:
         client = storage.Client.from_service_account_json(SERVICE_ACCOUNT_FILE)

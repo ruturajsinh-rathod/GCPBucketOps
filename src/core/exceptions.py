@@ -94,6 +94,7 @@ class InvalidCredsException(UnauthorizedError):
 
 class ServiceUnavailable(CustomException):
     """
-        Exception raised for service unavailable
+    Exception raised for service unavailable
     """
+
     status_code = status.HTTP_503_SERVICE_UNAVAILABLE

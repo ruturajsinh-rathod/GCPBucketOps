@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status, UploadFile, File, Path
+from fastapi import APIRouter, Depends, File, Path, UploadFile, status
 
 from src.api.v1.file.schemas import FileResponse, GenerateURLResponse
 from src.api.v1.file.services import FileService
@@ -19,17 +19,17 @@ router = APIRouter(prefix="/files", tags=["Files"])
 )
 async def upload(
     _: Annotated[bool, Depends(basic_auth)],
-        file: Annotated[UploadFile, File(...)],
+    file: Annotated[UploadFile, File(...)],
     service: Annotated[FileService, Depends()],
 ) -> BaseResponse[FileResponse]:
     """
     Upload a file to GCS and store metadata in the database.
     """
     return BaseResponse(
-        data=await service.upload(
-                                  file=file),
+        data=await service.upload(file=file),
         code=status.HTTP_201_CREATED,
     )
+
 
 @router.delete(
     "/{file_name}",
@@ -40,17 +40,17 @@ async def upload(
 )
 async def delete(
     _: Annotated[bool, Depends(basic_auth)],
-        file_name: Annotated[str, Path()],
+    file_name: Annotated[str, Path()],
     service: Annotated[FileService, Depends()],
 ) -> BaseResponse:
     """
     Delete a file from GCS and mark it as deleted in the database.
     """
     return BaseResponse(
-        data=await service.delete(
-                                  file_name=file_name),
+        data=await service.delete(file_name=file_name),
         code=status.HTTP_200_OK,
     )
+
 
 @router.post(
     "/generate-url/{file_name}",
@@ -61,14 +61,13 @@ async def delete(
 )
 async def generate_url(
     _: Annotated[bool, Depends(basic_auth)],
-        file_name: Annotated[str, Path()],
+    file_name: Annotated[str, Path()],
     service: Annotated[FileService, Depends()],
 ) -> BaseResponse[GenerateURLResponse]:
     """
     Generate a pre-signed download URL for a file in GCS.
     """
     return BaseResponse(
-        data=await service.generate_url(
-                                  file_name=file_name),
+        data=await service.generate_url(file_name=file_name),
         code=status.HTTP_200_OK,
     )

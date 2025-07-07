@@ -1,4 +1,4 @@
-from dotenv import load_dotenv, find_dotenv
+from dotenv import find_dotenv, load_dotenv
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -6,7 +6,9 @@ load_dotenv(find_dotenv())
 
 
 class DatabaseSettings(BaseSettings):
-    model_config = SettingsConfigDict(extra='allow', env_file='./.env', env_file_encoding='utf-8')
+    model_config = SettingsConfigDict(
+        extra="allow", env_file="./.env", env_file_encoding="utf-8"
+    )
     DATABASE_USER: str | None = None
     DATABASE_PASSWORD: str | None = None
     DATABASE_HOST: str | None = None
@@ -43,7 +45,9 @@ class DatabaseSettings(BaseSettings):
 
 
 class JWTSettings(BaseSettings):
-    model_config = SettingsConfigDict(extra='allow', env_file='./.env', env_file_encoding='utf-8')
+    model_config = SettingsConfigDict(
+        extra="allow", env_file="./.env", env_file_encoding="utf-8"
+    )
     JWT_SECRET_KEY: str | None = None
     JWT_ALGORITHM: str | None = None
     ACCESS_TOKEN_EXP: int | None = None
@@ -51,14 +55,18 @@ class JWTSettings(BaseSettings):
 
 
 class BasicAuthSettings(BaseSettings):
-    model_config = SettingsConfigDict(extra='allow', env_file='./.env', env_file_encoding='utf-8')
+    model_config = SettingsConfigDict(
+        extra="allow", env_file="./.env", env_file_encoding="utf-8"
+    )
 
     BASIC_USERNAME: str | None = None
     BASIC_PASSWORD: str | None = None
 
 
 class AppSettings(BaseSettings):
-    model_config = SettingsConfigDict(extra='allow', env_file='./.env', env_file_encoding='utf-8')
+    model_config = SettingsConfigDict(
+        extra="allow", env_file="./.env", env_file_encoding="utf-8"
+    )
 
     APP_NAME: str | None = None
     APP_VERSION: str | None = None
@@ -73,8 +81,11 @@ class GCSSettings(BaseSettings):
     EXPIRATION_SECONDS: int | None = None
 
 
-class Settings(DatabaseSettings, JWTSettings, BasicAuthSettings, AppSettings, GCSSettings):
+class Settings(
+    DatabaseSettings, JWTSettings, BasicAuthSettings, AppSettings, GCSSettings
+):
     pass
+
 
 database_settings = DatabaseSettings()
 jwt_settings = JWTSettings()
