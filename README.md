@@ -1,4 +1,4 @@
-# Blogpost App
+# GCPBucketOps
 
 ## To run the project in local
 
