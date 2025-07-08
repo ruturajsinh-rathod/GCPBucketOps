@@ -9,7 +9,7 @@ from src.api.v1.file.services import FileService
 from src.core.basic_auth import basic_auth
 from src.core.utils.schema import BaseResponse
 
-router = APIRouter(prefix="/files", tags=["Files"])
+router = APIRouter(prefix="/gcs-bucket", tags=["GCS Bucket"])
 
 
 @router.post(
@@ -115,7 +115,7 @@ async def get_all(
 
 
 @router.get(
-    "/signed-upload-url",
+    "/upload-url",
     status_code=status.HTTP_200_OK,
     name="signed upload url",
     description="Signed upload url",
