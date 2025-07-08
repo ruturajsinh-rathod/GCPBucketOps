@@ -90,6 +90,23 @@ async def get_all(
     page_token: Annotated[str | None, Query()] = None,
     max_results: Annotated[int | None, Query(ge=1)] = 100,
 ) -> BaseResponse[GetAllGCSData]:
+    """
+    Retrieve a paginated list of all files from the GCS bucket.
+
+    This endpoint returns metadata for files stored in the Google Cloud Storage (GCS) bucket.
+    It supports pagination using a page token and allows limiting the number of results per page.
+
+    Authorization:
+        Requires basic authentication.
+
+    Query Parameters:
+        page_token (str | None): A token indicating the start of the page of results. Optional.
+        max_results (int | None): Maximum number of results to return (minimum 1, default is 100).
+
+    Returns:
+        BaseResponse[GetAllGCSData]: A structured response containing the list of files
+        and pagination metadata.
+    """
 
     return BaseResponse(
         data=await service.get_all(page_token=page_token, max_results=max_results),
