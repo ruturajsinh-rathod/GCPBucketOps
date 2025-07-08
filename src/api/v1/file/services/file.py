@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
 from fastapi import Depends, UploadFile
+from google.cloud import storage
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,8 +20,7 @@ from src.api.v1.file.exceptions import (
     GenerateURLException,
 )
 from src.api.v1.file.models.file import FileModel
-from src.api.v1.file.schemas import GenerateURLResponse
-from src.api.v1.file.schemas.response import BaseGCSData, GetAllGCSData
+from src.api.v1.file.schemas import BaseGCSData, DownloadURLResponse, GetAllGCSData, UploadURLResponse
 from src.core.gcs import BUCKET_NAME, client, upload_to_gcs
 from src.core.utils import core_logger
 
@@ -172,7 +172,7 @@ class FileService:
             core_logger.critical(f"Failed to remove file '{file_name}' from GCS or DB: {exc}")
             raise GCSRemoveException
 
-    async def generate_url(self, file_name: str, content_type: ContentTypeEnum) -> GenerateURLResponse:
+    async def generate_url(self, file_name: str, content_type: ContentTypeEnum) -> DownloadURLResponse:
         """
         Generate a pre-signed, temporary download URL for a file stored in GCS.
 
@@ -180,7 +180,7 @@ class FileService:
             file_name (str): The name of the file to generate the URL for.
 
         Returns:
-            GenerateURLResponse: The generated signed URL and its validity duration.
+            DownloadURLResponse: The generated signed URL and its validity duration.
 
         Raises:
             GCSFileDoesNotExistsException: If the file does not exist in GCS.
@@ -202,7 +202,7 @@ class FileService:
                 method="GET",
             )
 
-            return GenerateURLResponse(download_url=url, valid_for_seconds=gcs_settings.EXPIRATION_SECONDS)
+            return DownloadURLResponse(download_url=url, valid_for_seconds=gcs_settings.EXPIRATION_SECONDS)
 
         except GCSFileDoesNotExistsException:
             raise
@@ -262,3 +262,37 @@ class FileService:
         except Exception as exc:
             core_logger.critical(f"Failed to fetch GCS data: {exc}")
             raise GCSDataFetchException
+
+    async def signed_upload_url(self, file_name: str, content_type: ContentTypeEnum) -> UploadURLResponse:
+        """
+        Generates a V4 signed URL for uploading a file to Google Cloud Storage.
+
+        This method creates a signed URL using the HTTP PUT method, allowing clients to upload
+        a file directly to the configured GCS bucket without passing through the backend.
+        The signed URL is time-limited and requires the specified content type to match
+        during the upload request.
+
+        Parameters:
+        - file_name (str): The name (and optional path) of the file to be uploaded.
+        - content_type (ContentTypeEnum): The MIME type of the file (e.g., 'image/jpeg', 'application/pdf').
+
+        Returns:
+        - UploadURLResponse: An object containing the signed upload URL and its validity duration in seconds.
+
+        Notes:
+        - The client must use HTTP PUT with the exact `Content-Type` when uploading the file.
+        - The signed URL will expire after the number of seconds defined in `gcs_settings.EXPIRATION_SECONDS`.
+        """
+
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(BUCKET_NAME)
+        blob = bucket.blob(file_name)
+
+        url = blob.generate_signed_url(
+            version="v4",
+            expiration=timedelta(seconds=gcs_settings.EXPIRATION_SECONDS),
+            method="PUT",
+            content_type=content_type.value,
+        )
+
+        return UploadURLResponse(upload_url=url, valid_for_seconds=gcs_settings.EXPIRATION_SECONDS)

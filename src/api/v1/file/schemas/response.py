@@ -38,7 +38,7 @@ class FileResponse(CamelCaseModel):
     status: FileStatusEnum
 
 
-class GenerateURLResponse(CamelCaseModel):
+class DownloadURLResponse(CamelCaseModel):
     """
     Response model for a pre-signed download URL for a file stored in GCS.
 
@@ -83,3 +83,22 @@ class GetAllGCSData(CamelCaseModel):
 
     files: list[BaseGCSData]
     next_page_token: str | None = None
+
+
+class UploadURLResponse(CamelCaseModel):
+    """
+    Response model containing a signed URL for uploading a file to Google Cloud Storage.
+
+    Attributes:
+    - upload_url (str): A V4-signed URL that allows the client to upload a file directly
+      to the GCS bucket using an HTTP PUT request.
+    - valid_for_seconds (int): The number of seconds the signed URL remains valid
+      before it expires.
+
+    Usage:
+    This model is typically returned by the `signed_upload_url` endpoint and used
+    by clients to perform secure, temporary uploads without needing backend file handling.
+    """
+
+    upload_url: str
+    valid_for_seconds: int
