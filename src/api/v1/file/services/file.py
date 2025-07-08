@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.config import gcs_settings
 from database.db import db_session
-from src.api.v1.file.enums import FileStatusEnum
+from src.api.v1.file.enums import ContentType, FileStatusEnum
 from src.api.v1.file.exceptions import (
     DBFileDoesNotExistsException,
     DBFileExistsException,
@@ -116,7 +116,7 @@ class FileService:
             )
             raise GCSUploadException
 
-    async def delete(self, file_name: str) -> dict[str, str]:
+    async def delete(self, file_name: str, content_type: ContentType) -> dict[str, str]:
         """
         Delete a file from GCS and mark it as deleted in the database.
 
@@ -138,6 +138,7 @@ class FileService:
         """
 
         try:
+            file_name = f"{file_name}{content_type.file_extension()}"
             bucket = client.bucket(BUCKET_NAME)
             blob = bucket.blob(file_name)
 
@@ -177,7 +178,9 @@ class FileService:
             )
             raise GCSRemoveException
 
-    async def generate_url(self, file_name: str) -> GenerateURLResponse:
+    async def generate_url(
+        self, file_name: str, content_type: ContentType
+    ) -> GenerateURLResponse:
         """
         Generate a pre-signed, temporary download URL for a file stored in GCS.
 
@@ -192,6 +195,7 @@ class FileService:
         """
 
         try:
+            file_name = f"{file_name}{content_type.file_extension()}"
             bucket = client.bucket(BUCKET_NAME)
 
             blob = bucket.blob(file_name)
@@ -209,6 +213,10 @@ class FileService:
             return GenerateURLResponse(
                 download_url=url, valid_for_seconds=gcs_settings.EXPIRATION_SECONDS
             )
+
+        except GCSFileDoesNotExistsException:
+            raise
+
         except Exception as exc:
             core_logger.critical(f"Failed to generate url for '{file_name}': {exc}")
             raise GenerateURLException

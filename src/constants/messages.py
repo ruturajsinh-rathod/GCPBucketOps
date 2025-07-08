@@ -16,7 +16,7 @@ GCS_FILE_EXISTS = "The file already exists in Google Cloud Storage. Please use a
 
 DB_FILE_EXISTS = "A file record with this name already exists in the database. Please use a different name or remove the existing record."
 
-GCS_FILE_NOT_FOUND = "The file does not exist in Google Cloud Storage. It may have been deleted or the name is incorrect."
+GCS_FILE_NOT_FOUND = "The file does not exist in Google Cloud Storage. It may have been deleted or the name or content type is incorrect."
 
 DB_FILE_NOT_FOUND = "The file record does not exist in the database. It may have been removed or never created."
 
