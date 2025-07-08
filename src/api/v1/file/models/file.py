@@ -44,17 +44,11 @@ class FileModel(Base):
     public_url: Mapped[str] = mapped_column(nullable=True)
     version: Mapped[str] = mapped_column(nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(
-        server_default=func.now(), nullable=False
-    )
-    expires_at: Mapped[datetime] = mapped_column(
-        server_default=text("(NOW() + INTERVAL '7 days')"), nullable=True
-    )
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now(), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(server_default=text("(NOW() + INTERVAL '7 days')"), nullable=True)
     deleted_at: Mapped[datetime] = mapped_column(nullable=True)
 
-    status: Mapped[FileStatusEnum] = mapped_column(
-        SqlEnum(FileStatusEnum, name="filestatusenum"), nullable=False
-    )
+    status: Mapped[FileStatusEnum] = mapped_column(SqlEnum(FileStatusEnum, name="filestatusenum"), nullable=False)
 
     @classmethod
     def create(
@@ -99,6 +93,5 @@ class FileModel(Base):
             content_type=content_type,
             public_url=public_url,
             version=version,
-            expires_at=datetime.now(timezone.utc).replace(tzinfo=None)
-            + timedelta(days=7),
+            expires_at=datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=7),
         )

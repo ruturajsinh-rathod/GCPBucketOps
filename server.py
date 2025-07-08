@@ -1,5 +1,6 @@
 import asyncio
 from contextlib import asynccontextmanager
+from typing import Any, AsyncGenerator
 
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,15 +28,11 @@ def root_health_path(_app: FastAPI) -> None:
 
     @_app.get("/", include_in_schema=False)
     def root() -> JSONResponse:
-        return JSONResponse(
-            status_code=status.HTTP_200_OK, content={"message": constants.SUCCESS}
-        )
+        return JSONResponse(status_code=status.HTTP_200_OK, content={"message": constants.SUCCESS})
 
     @_app.get("/healthcheck", include_in_schema=False)
     def healthcheck() -> JSONResponse:
-        return JSONResponse(
-            status_code=status.HTTP_200_OK, content={"message": constants.SUCCESS}
-        )
+        return JSONResponse(status_code=status.HTTP_200_OK, content={"message": constants.SUCCESS})
 
 
 def init_middlewares(_app: FastAPI) -> None:
@@ -53,7 +50,7 @@ def init_middlewares(_app: FastAPI) -> None:
 
 # ------------------- LIFESPAN HANDLER -------------------
 @asynccontextmanager
-async def lifespan(_: FastAPI):
+async def lifespan(_: FastAPI) -> AsyncGenerator[None, Any]:
     """
     Starts periodic cleanup task on app startup.
     """

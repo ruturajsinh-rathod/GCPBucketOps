@@ -9,7 +9,7 @@ BUCKET_NAME = gcs_settings.BUCKET_NAME
 client = storage.Client.from_service_account_json(SERVICE_ACCOUNT_FILE)
 
 
-def upload_to_gcs(file_data, destination_blob_name):
+def upload_to_gcs(file_data, destination_blob_name) -> str | None:
     """
     Uploads a file to Google Cloud Storage.
 

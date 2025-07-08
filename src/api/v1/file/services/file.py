@@ -85,9 +85,7 @@ class FileService:
             )
 
             if file_obj:
-                core_logger.warning(
-                    f"File record '{file.filename}' already exists in the database."
-                )
+                core_logger.warning(f"File record '{file.filename}' already exists in the database.")
                 raise DBFileExistsException
 
             # Upload to GCS
@@ -113,14 +111,10 @@ class FileService:
             raise
 
         except Exception as exc:
-            core_logger.critical(
-                f"Unexpected error while uploading file '{file.filename}': {exc}"
-            )
+            core_logger.critical(f"Unexpected error while uploading file '{file.filename}': {exc}")
             raise GCSUploadException
 
-    async def delete(
-        self, file_name: str, content_type: ContentTypeEnum
-    ) -> dict[str, str]:
+    async def delete(self, file_name: str, content_type: ContentTypeEnum) -> dict[str, str]:
         """
         Delete a file from GCS and mark it as deleted in the database.
 
@@ -164,9 +158,7 @@ class FileService:
             if file:
                 file.status = FileStatusEnum.DELETED
                 file.deleted_at = datetime.now(timezone.utc).replace(tzinfo=None)
-                core_logger.info(
-                    f"File record for '{file_name}' marked as deleted in DB."
-                )
+                core_logger.info(f"File record for '{file_name}' marked as deleted in DB.")
             else:
                 core_logger.warning(f"File record '{file_name}' does not exist in DB.")
                 raise DBFileDoesNotExistsException
@@ -177,14 +169,10 @@ class FileService:
             raise
 
         except Exception as exc:
-            core_logger.critical(
-                f"Failed to remove file '{file_name}' from GCS or DB: {exc}"
-            )
+            core_logger.critical(f"Failed to remove file '{file_name}' from GCS or DB: {exc}")
             raise GCSRemoveException
 
-    async def generate_url(
-        self, file_name: str, content_type: ContentTypeEnum
-    ) -> GenerateURLResponse:
+    async def generate_url(self, file_name: str, content_type: ContentTypeEnum) -> GenerateURLResponse:
         """
         Generate a pre-signed, temporary download URL for a file stored in GCS.
 
@@ -214,9 +202,7 @@ class FileService:
                 method="GET",
             )
 
-            return GenerateURLResponse(
-                download_url=url, valid_for_seconds=gcs_settings.EXPIRATION_SECONDS
-            )
+            return GenerateURLResponse(download_url=url, valid_for_seconds=gcs_settings.EXPIRATION_SECONDS)
 
         except GCSFileDoesNotExistsException:
             raise
@@ -225,9 +211,7 @@ class FileService:
             core_logger.critical(f"Failed to generate url for '{file_name}': {exc}")
             raise GenerateURLException
 
-    async def get_all(
-        self, max_results: int, page_token: str | None = None
-    ) -> GetAllGCSData:
+    async def get_all(self, max_results: int, page_token: str | None = None) -> GetAllGCSData:
         """
         Retrieve a paginated list of files from the Google Cloud Storage (GCS) bucket.
 

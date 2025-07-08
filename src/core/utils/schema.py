@@ -39,9 +39,7 @@ class BaseResponse(CamelCaseModel, Generic[BaseDataField]):
     code: int = st.HTTP_200_OK
     data: BaseDataField | None = None
 
-    def __init__(
-        self, data: Any, status: str = constants.SUCCESS, code: int = st.HTTP_200_OK
-    ) -> None:
+    def __init__(self, data: Any, status: str = constants.SUCCESS, code: int = st.HTTP_200_OK) -> None:
         super().__init__()
         self.data = data
         self.status = status
