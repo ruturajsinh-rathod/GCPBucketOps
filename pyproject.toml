@@ -26,3 +26,23 @@ cachetools = "^5.3.2"
 fastapi-pagination = "^0.13.3"
 python-multipart = "^0.0.20"
 google-cloud-storage = "^3.2.0"
+
+[tool.black]
+line-length = 120
+target-version = ['py311']
+skip-string-normalization = false
+
+[tool.isort]
+profile = "black"
+line_length = 120
+known_first_party = ["src"]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+select = ["E", "F", "I"]
+fix = true

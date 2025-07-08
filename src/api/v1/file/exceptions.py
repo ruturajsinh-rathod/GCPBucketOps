@@ -1,13 +1,5 @@
-from fastapi import status
-
 from src import constants
-from src.core.exceptions import (
-    AlreadyExistsError,
-    CustomException,
-    NotFoundError,
-    ServiceUnavailable,
-    UnauthorizedError,
-)
+from src.core.exceptions import AlreadyExistsError, NotFoundError, ServiceUnavailable, UnauthorizedError
 
 
 class InvalidCredsException(UnauthorizedError):

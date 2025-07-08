@@ -6,9 +6,7 @@ load_dotenv(find_dotenv())
 
 
 class DatabaseSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        extra="allow", env_file="./.env", env_file_encoding="utf-8"
-    )
+    model_config = SettingsConfigDict(extra="allow", env_file="./.env", env_file_encoding="utf-8")
     DATABASE_USER: str | None = None
     DATABASE_PASSWORD: str | None = None
     DATABASE_HOST: str | None = None
@@ -41,13 +39,13 @@ class DatabaseSettings(BaseSettings):
         ):
             raise ValueError("Incomplete database connection information")
 
-        return f"postgresql+asyncpg://{database_user}:{database_password}@{database_host}:{database_port}/{database_name}"
+        return (
+            f"postgresql+asyncpg://{database_user}:{database_password}@{database_host}:{database_port}/{database_name}"
+        )
 
 
 class JWTSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        extra="allow", env_file="./.env", env_file_encoding="utf-8"
-    )
+    model_config = SettingsConfigDict(extra="allow", env_file="./.env", env_file_encoding="utf-8")
     JWT_SECRET_KEY: str | None = None
     JWT_ALGORITHM: str | None = None
     ACCESS_TOKEN_EXP: int | None = None
@@ -55,18 +53,14 @@ class JWTSettings(BaseSettings):
 
 
 class BasicAuthSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        extra="allow", env_file="./.env", env_file_encoding="utf-8"
-    )
+    model_config = SettingsConfigDict(extra="allow", env_file="./.env", env_file_encoding="utf-8")
 
     BASIC_USERNAME: str | None = None
     BASIC_PASSWORD: str | None = None
 
 
 class AppSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        extra="allow", env_file="./.env", env_file_encoding="utf-8"
-    )
+    model_config = SettingsConfigDict(extra="allow", env_file="./.env", env_file_encoding="utf-8")
 
     APP_NAME: str | None = None
     APP_VERSION: str | None = None
@@ -81,9 +75,7 @@ class GCSSettings(BaseSettings):
     EXPIRATION_SECONDS: int | None = None
 
 
-class Settings(
-    DatabaseSettings, JWTSettings, BasicAuthSettings, AppSettings, GCSSettings
-):
+class Settings(DatabaseSettings, JWTSettings, BasicAuthSettings, AppSettings, GCSSettings):
     pass
 
 

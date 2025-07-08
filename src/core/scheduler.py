@@ -46,8 +46,7 @@ class Scheduler:
 
             files = await self.session.scalars(
                 select(FileModel).where(
-                    FileModel.expires_at
-                    < datetime.now(timezone.utc).replace(tzinfo=None),
+                    FileModel.expires_at < datetime.now(timezone.utc).replace(tzinfo=None),
                     FileModel.deleted_at.is_(None),
                 )
             )
@@ -59,20 +58,16 @@ class Scheduler:
                 if blob.exists():
                     blob.delete()
                 else:
-                    background_logger.warning(
-                        f"{file.file_name} is not found in GCS but exists in our db."
-                    )
+                    background_logger.warning(f"{file.file_name} is not found in GCS but exists in our db.")
                 file.status = FileStatusEnum.DELETED
                 file.deleted_at = datetime.now(timezone.utc).replace(tzinfo=None)
 
             return
         except Exception as exc:
-            background_logger.error(
-                f"An error occurred when deleting expired files from GCS: {exc}"
-            )
+            background_logger.error(f"An error occurred when deleting expired files from GCS: {exc}")
 
 
-async def periodic_cleanup():
+async def periodic_cleanup() -> None:
     """
     Runs delete_expired_files after every 24 hours
     """

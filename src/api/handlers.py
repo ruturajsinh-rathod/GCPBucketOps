@@ -20,13 +20,7 @@ def start_exception_handlers(_app: FastAPI) -> None:
         """
         exc = args[1]
         transformed_errors = [
-            {
-                (
-                    error["loc"][1]
-                    if "loc" in error and len(error["loc"]) > 1
-                    else "message"
-                ): error["msg"]
-            }
+            {(error["loc"][1] if "loc" in error and len(error["loc"]) > 1 else "message"): error["msg"]}
             for error in exc.errors()
         ]
         return JSONResponse(

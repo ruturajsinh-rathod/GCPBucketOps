@@ -5,7 +5,7 @@ from config.config import basic_auth_settings
 from src.core.exceptions import InvalidCredsException
 
 
-def basic_auth(credentials: HTTPBasicCredentials = Depends(HTTPBasic())):
+def basic_auth(credentials: HTTPBasicCredentials = Depends(HTTPBasic())) -> bool:
     """
     Dependency function for required basic authentication.
     It uses the HTTPBasic instance to perform authentication.
