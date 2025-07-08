@@ -45,8 +45,11 @@ async def get_session() -> AsyncGenerator[AsyncSession, Any]:
     """
     async with async_session() as session:
         async with session.begin():
-            yield session
-
+            try:
+                yield session
+            except Exception:
+                await session.rollback()
+                raise
 
 class Base(DeclarativeBase):
     """

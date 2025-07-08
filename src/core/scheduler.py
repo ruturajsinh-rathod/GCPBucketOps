@@ -84,6 +84,6 @@ async def periodic_cleanup():
                 await scheduler.delete_old_files()
 
         except Exception as exc:
-            background_logger.error(f"Error occurred in periodic cleanup: {exc}")
+            background_logger.error(f"Error in cleanup: {exc}")
 
-        await asyncio.sleep(60 * 60 * 24)  # 1 day
+        await asyncio.sleep(60 * 60 * 24)  # 24 hours
