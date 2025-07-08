@@ -55,8 +55,8 @@ async def delete(
     )
 
 
-@router.post(
-    "/generate-url/{file_name}",
+@router.get(
+    "/{file_name}/download-url",
     status_code=status.HTTP_200_OK,
     name="generate url",
     description="Generate url",
