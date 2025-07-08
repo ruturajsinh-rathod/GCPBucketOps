@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.config import gcs_settings
 from database.db import db_session
-from src.api.v1.file.enums import FileStatusEnum, ContentType
+from src.api.v1.file.enums import ContentType, FileStatusEnum
 from src.api.v1.file.exceptions import (
     DBFileDoesNotExistsException,
     DBFileExistsException,
@@ -178,7 +178,9 @@ class FileService:
             )
             raise GCSRemoveException
 
-    async def generate_url(self, file_name: str, content_type: ContentType) -> GenerateURLResponse:
+    async def generate_url(
+        self, file_name: str, content_type: ContentType
+    ) -> GenerateURLResponse:
         """
         Generate a pre-signed, temporary download URL for a file stored in GCS.
 

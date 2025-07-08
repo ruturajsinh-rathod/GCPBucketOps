@@ -94,16 +94,16 @@ class ContentType(str, Enum):
 
     def file_extension(self) -> str:
         """
-                Get the standard file extension associated with the MIME content type.
+        Get the standard file extension associated with the MIME content type.
 
-                Returns:
-                    str: The file extension (including the leading dot),
-                         or an empty string if the MIME type is unrecognized.
+        Returns:
+            str: The file extension (including the leading dot),
+                 or an empty string if the MIME type is unrecognized.
 
-                Example:
-                    >>> ContentType.MP3.file_extension()
-                    '.mp3'
-                """
+        Example:
+            >>> ContentType.MP3.file_extension()
+            '.mp3'
+        """
 
         mapping = {
             # Images
@@ -114,21 +114,18 @@ class ContentType(str, Enum):
             "image/svg+xml": ".svg",
             "image/webp": ".webp",
             "image/tiff": ".tiff",
-
             # Audio
             "audio/mpeg": ".mp3",
             "audio/wav": ".wav",
             "audio/ogg": ".ogg",
             "audio/aac": ".aac",
             "audio/flac": ".flac",
-
             # Video
             "video/mp4": ".mp4",
             "video/mpeg": ".mpeg",
             "video/ogg": ".ogv",
             "video/webm": ".webm",
             "video/x-msvideo": ".avi",
-
             # Text
             "text/plain": ".txt",
             "text/html": ".html",
@@ -136,7 +133,6 @@ class ContentType(str, Enum):
             "text/csv": ".csv",
             "text/xml": ".xml",
             "text/javascript": ".js",
-
             # Application
             "application/json": ".json",
             "application/pdf": ".pdf",
@@ -150,7 +146,6 @@ class ContentType(str, Enum):
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ".xlsx",
             "application/vnd.openxmlformats-officedocument.presentationml.presentation": ".pptx",
-
             # Binary
             "application/octet-stream": ".bin",
         }

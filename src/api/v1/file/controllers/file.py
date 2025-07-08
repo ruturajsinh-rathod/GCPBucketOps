@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Path, UploadFile, status, Query
+from fastapi import APIRouter, Depends, File, Path, Query, UploadFile, status
 
 from src.api.v1.file.enums import ContentType
 from src.api.v1.file.schemas import FileResponse, GenerateURLResponse
@@ -64,8 +64,8 @@ async def delete(
 async def generate_url(
     _: Annotated[bool, Depends(basic_auth)],
     file_name: Annotated[str, Path()],
-        content_type: Annotated[ContentType, Query()],
-        service: Annotated[FileService, Depends()],
+    content_type: Annotated[ContentType, Query()],
+    service: Annotated[FileService, Depends()],
 ) -> BaseResponse[GenerateURLResponse]:
     """
     Generate a pre-signed download URL for a file in GCS.
