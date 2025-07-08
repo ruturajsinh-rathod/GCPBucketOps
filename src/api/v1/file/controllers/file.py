@@ -1,7 +1,8 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Path, UploadFile, status
+from fastapi import APIRouter, Depends, File, Path, Query, UploadFile, status
 
+from src.api.v1.file.enums import ContentType
 from src.api.v1.file.schemas import FileResponse, GenerateURLResponse
 from src.api.v1.file.services import FileService
 from src.core.basic_auth import basic_auth
@@ -41,13 +42,14 @@ async def upload(
 async def delete(
     _: Annotated[bool, Depends(basic_auth)],
     file_name: Annotated[str, Path()],
+    content_type: Annotated[ContentType, Query()],
     service: Annotated[FileService, Depends()],
 ) -> BaseResponse:
     """
     Delete a file from GCS and mark it as deleted in the database.
     """
     return BaseResponse(
-        data=await service.delete(file_name=file_name),
+        data=await service.delete(file_name=file_name, content_type=content_type),
         code=status.HTTP_200_OK,
     )
 
@@ -62,13 +64,14 @@ async def delete(
 async def generate_url(
     _: Annotated[bool, Depends(basic_auth)],
     file_name: Annotated[str, Path()],
+    content_type: Annotated[ContentType, Query()],
     service: Annotated[FileService, Depends()],
 ) -> BaseResponse[GenerateURLResponse]:
     """
     Generate a pre-signed download URL for a file in GCS.
     """
     return BaseResponse(
-        data=await service.generate_url(file_name=file_name),
+        data=await service.generate_url(file_name=file_name, content_type=content_type),
         code=status.HTTP_200_OK,
     )
 
