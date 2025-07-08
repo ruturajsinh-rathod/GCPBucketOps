@@ -52,3 +52,7 @@ class GCSRemoveException(ServiceUnavailable):
 
 class GenerateURLException(ServiceUnavailable):
     message = constants.GENERATE_URL_EXCEPTION
+
+
+class GCSDataFetchException(ServiceUnavailable):
+    message = constants.GCS_DATA_FETCH_EXCEPTION

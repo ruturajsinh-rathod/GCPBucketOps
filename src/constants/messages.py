@@ -25,3 +25,7 @@ GCS_UPLOAD_EXCEPTION = "Failed to upload file. Please try again later."
 GCS_REMOVE_EXCEPTION = "Failed to delete file. Please try again later."
 
 GENERATE_URL_EXCEPTION = "Failed to generate pre-signed url. Please try again later."
+
+GCS_DATA_FETCH_EXCEPTION = (
+    "Failed to retrieve data from Google Cloud Storage. Please try again later."
+)

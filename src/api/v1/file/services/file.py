@@ -7,10 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.config import gcs_settings
 from database.db import db_session
-from src.api.v1.file.enums import ContentType, FileStatusEnum
+from src.api.v1.file.enums import ContentTypeEnum, FileStatusEnum
 from src.api.v1.file.exceptions import (
     DBFileDoesNotExistsException,
     DBFileExistsException,
+    GCSDataFetchException,
     GCSFileDoesNotExistsException,
     GCSFileExistsException,
     GCSRemoveException,
@@ -19,6 +20,7 @@ from src.api.v1.file.exceptions import (
 )
 from src.api.v1.file.models.file import FileModel
 from src.api.v1.file.schemas import GenerateURLResponse
+from src.api.v1.file.schemas.response import BaseGCSData, GetAllGCSData
 from src.core.gcs import BUCKET_NAME, client, upload_to_gcs
 from src.core.utils import core_logger
 
@@ -116,7 +118,9 @@ class FileService:
             )
             raise GCSUploadException
 
-    async def delete(self, file_name: str, content_type: ContentType) -> dict[str, str]:
+    async def delete(
+        self, file_name: str, content_type: ContentTypeEnum
+    ) -> dict[str, str]:
         """
         Delete a file from GCS and mark it as deleted in the database.
 
@@ -179,7 +183,7 @@ class FileService:
             raise GCSRemoveException
 
     async def generate_url(
-        self, file_name: str, content_type: ContentType
+        self, file_name: str, content_type: ContentTypeEnum
     ) -> GenerateURLResponse:
         """
         Generate a pre-signed, temporary download URL for a file stored in GCS.
@@ -220,3 +224,57 @@ class FileService:
         except Exception as exc:
             core_logger.critical(f"Failed to generate url for '{file_name}': {exc}")
             raise GenerateURLException
+
+    async def get_all(
+        self, max_results: int, page_token: str | None = None
+    ) -> GetAllGCSData:
+        """
+        Retrieve a paginated list of files from the Google Cloud Storage (GCS) bucket.
+
+        This method lists files (blobs) in the configured GCS bucket, starting from the
+        given page token and returning up to the specified number of results. It also
+        returns the `next_page_token` if more files are available.
+
+        Args:
+            page_token (str): A token indicating the page of results to fetch.
+                              Use `None` or an empty string to start from the beginning.
+            max_results (int): Maximum number of files to return in a single call.
+
+        Returns:
+            GetAllGCSData: An object containing:
+                - `files`: A list of `BaseGCSData` entries for each file in the bucket.
+                - `next_page_token`: A string token for fetching the next page of results,
+                                     or `None` if there are no more results.
+
+        Raises:
+            GCSDataFetchException: If there is an error while accessing GCS.
+
+        Logging:
+            Logs a critical error if GCS data fetch fails.
+        """
+        try:
+            bucket = client.get_bucket(BUCKET_NAME)
+
+            blobs = bucket.list_blobs(page_token=page_token, max_results=max_results)
+
+            file_list = []
+            next_page_token = None
+
+            for blob in blobs:
+                file_list.append(
+                    BaseGCSData(
+                        name=blob.name,
+                        size=blob.size,
+                        updated=blob.updated,
+                        content_type=blob.content_type,
+                    )
+                )
+
+            if blobs.next_page_token:
+                next_page_token = blobs.next_page_token
+
+            return GetAllGCSData(files=file_list, next_page_token=next_page_token)
+
+        except Exception as exc:
+            core_logger.critical(f"Failed to fetch GCS data: {exc}")
+            raise GCSDataFetchException
