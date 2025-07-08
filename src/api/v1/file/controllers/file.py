@@ -55,8 +55,8 @@ async def delete(
     )
 
 
-@router.post(
-    "/generate-url/{file_name}",
+@router.get(
+    "/{file_name}/download-url",
     status_code=status.HTTP_200_OK,
     name="generate url",
     description="Generate url",
@@ -93,5 +93,26 @@ async def get_all(
 
     return BaseResponse(
         data=await service.get_all(page_token=page_token, max_results=max_results),
+        code=status.HTTP_200_OK,
+    )
+
+
+@router.post(
+    "/{file_name}/public",
+    status_code=status.HTTP_200_OK,
+    name="make public url",
+    description="Make public url",
+    operation_id="make_public_url",
+    include_in_schema=False
+)
+async def public_url(
+    _: Annotated[bool, Depends(basic_auth)],
+    file_name: Annotated[str, Path()],
+    content_type: Annotated[ContentTypeEnum, Query()],
+    service: Annotated[FileService, Depends()],
+) -> BaseResponse[GenerateURLResponse]:
+
+    return BaseResponse(
+        data=await service.make_public_url(file_name=file_name, content_type=content_type),
         code=status.HTTP_200_OK,
     )

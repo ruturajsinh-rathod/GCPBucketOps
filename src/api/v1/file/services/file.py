@@ -278,3 +278,29 @@ class FileService:
         except Exception as exc:
             core_logger.critical(f"Failed to fetch GCS data: {exc}")
             raise GCSDataFetchException
+
+    async def make_public_url(self, file_name: str, content_type: ContentTypeEnum):
+        # TODO: Public URL testing is pending;
+        #  Uniform Bucket-Level Access (UBLA) is enabled on the current bucket.
+
+        file_name = f"{file_name}{content_type.file_extension()}"
+        bucket = client.bucket(BUCKET_NAME)
+        blob = bucket.blob(file_name)
+
+        if not blob.exists():
+            raise GCSFileDoesNotExistsException
+
+        # Get current IAM policy for the object
+        policy = blob.get_iam_policy(requested_policy_version=3)
+
+        # Add 'allUsers' as viewer
+        policy.bindings.append({
+            "role": "roles/storage.objectViewer",
+            "members": {"allUsers"},
+        })
+
+        # Set updated IAM policy on the object
+        blob.set_iam_policy(policy)
+
+        url = f"Object gs://{BUCKET_NAME}/{file_name} is now publicly accessible."
+        return {"url": url}
