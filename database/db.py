@@ -51,6 +51,7 @@ async def get_session() -> AsyncGenerator[AsyncSession, Any]:
                 await session.rollback()
                 raise
 
+
 class Base(DeclarativeBase):
     """
     Base class for defining main database tables.

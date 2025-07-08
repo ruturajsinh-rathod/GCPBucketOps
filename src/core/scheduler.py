@@ -45,8 +45,7 @@ class Scheduler:
             bucket = client.bucket(BUCKET_NAME)
 
             files = await self.session.scalars(
-                select(FileModel)
-                .where(
+                select(FileModel).where(
                     FileModel.expires_at
                     < datetime.now(timezone.utc).replace(tzinfo=None),
                     FileModel.deleted_at.is_(None),
