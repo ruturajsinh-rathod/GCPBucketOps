@@ -212,3 +212,36 @@ class FileService:
         except Exception as exc:
             core_logger.critical(f"Failed to generate url for '{file_name}': {exc}")
             raise GenerateURLException
+
+    async def get_all(self,page_token: str, max_results: int = 100):
+        try:
+            bucket = client.get_bucket(BUCKET_NAME)
+
+            blobs = bucket.list_blobs(
+                prefix="",
+                page_token=page_token,
+                max_results=max_results
+            )
+
+            file_list = []
+            next_page_token = None
+
+            for blob in blobs:
+                file_list.append({
+                    "name": blob.name,
+                    "size": blob.size,
+                    "updated": blob.updated,
+                    "content_type": blob.content_type
+                })
+
+            # Check if pagination token exists
+            if blobs.next_page_token:
+                next_page_token = blobs.next_page_token
+
+            return {
+                "files": file_list,
+                "next_page_token": next_page_token
+            }
+
+        except Exception as e:
+            return {"error": str(e)}

@@ -71,3 +71,22 @@ async def generate_url(
         data=await service.generate_url(file_name=file_name),
         code=status.HTTP_200_OK,
     )
+
+@router.post(
+    "/",
+    status_code=status.HTTP_200_OK,
+    name="get all",
+    description="Get all",
+    operation_id="get_all",
+)
+async def get_all(
+    _: Annotated[bool, Depends(basic_auth)],
+    service: Annotated[FileService, Depends()],
+) -> BaseResponse:
+    """
+    Generate a pre-signed download URL for a file in GCS.
+    """
+    return BaseResponse(
+        data=await service.get_all(),
+        code=status.HTTP_200_OK,
+    )
