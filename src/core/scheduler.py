@@ -25,7 +25,7 @@ class Scheduler:
         """
         self.session = session
 
-    async def delete_old_files(self) -> None:
+    async def delete_expired_files(self) -> None:
         """
         Deletes expired files from Google Cloud Storage (GCS) and marks them as deleted in the database.
 
@@ -45,7 +45,8 @@ class Scheduler:
             bucket = client.bucket(BUCKET_NAME)
 
             files = await self.session.scalars(
-                select(FileModel.file_name).where(
+                select(FileModel)
+                .where(
                     FileModel.expires_at
                     < datetime.now(timezone.utc).replace(tzinfo=None),
                     FileModel.deleted_at.is_(None),
@@ -55,12 +56,12 @@ class Scheduler:
             files = files.all()
 
             for file in files:
-                blob = bucket.blob(file)
+                blob = bucket.blob(file.file_name)
                 if blob.exists():
                     blob.delete()
                 else:
                     background_logger.warning(
-                        f"{file} is not found in GCS but exists in our db."
+                        f"{file.file_name} is not found in GCS but exists in our db."
                     )
                 file.status = FileStatusEnum.DELETED
                 file.deleted_at = datetime.now(timezone.utc).replace(tzinfo=None)
@@ -74,14 +75,14 @@ class Scheduler:
 
 async def periodic_cleanup():
     """
-    Runs delete_old_files after every 24 hours
+    Runs delete_expired_files after every 24 hours
     """
     while True:
         try:
             async with get_session() as session:
                 scheduler = Scheduler(session=session)
 
-                await scheduler.delete_old_files()
+                await scheduler.delete_expired_files()
 
         except Exception as exc:
             background_logger.error(f"Error in cleanup: {exc}")
