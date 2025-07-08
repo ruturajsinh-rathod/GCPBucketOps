@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from src.api.v1.file.enums import FileStatusEnum
+from src.api.v1.file.enums import ContentTypeEnum, FileStatusEnum
 from src.core.utils import CamelCaseModel
 
 
@@ -52,3 +52,34 @@ class GenerateURLResponse(CamelCaseModel):
 
     download_url: str
     valid_for_seconds: int
+
+
+class BaseGCSData(CamelCaseModel):
+    """
+    Represents metadata for a single file (blob) stored in a Google Cloud Storage bucket.
+
+    Attributes:
+        name (str): The name (path/key) of the file in the bucket.
+        size (int): The size of the file in bytes.
+        updated (datetime): The last modified timestamp of the file.
+        content_type (ContentTypeEnum): The MIME type of the file, such as 'application/pdf' or 'image/png'.
+    """
+
+    name: str
+    size: int
+    updated: datetime
+    content_type: ContentTypeEnum
+
+
+class GetAllGCSData(CamelCaseModel):
+    """
+    Represents a paginated response for files retrieved from a Google Cloud Storage bucket.
+
+    Attributes:
+        files (list[BaseGCSData]): A list of file metadata objects returned from GCS.
+        next_page_token (str | None): A token to fetch the next page of results.
+                                      This is `None` if there are no more pages.
+    """
+
+    files: list[BaseGCSData]
+    next_page_token: str | None = None

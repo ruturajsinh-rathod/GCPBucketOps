@@ -2,8 +2,9 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Path, Query, UploadFile, status
 
-from src.api.v1.file.enums import ContentType
+from src.api.v1.file.enums import ContentTypeEnum
 from src.api.v1.file.schemas import FileResponse, GenerateURLResponse
+from src.api.v1.file.schemas.response import GetAllGCSData
 from src.api.v1.file.services import FileService
 from src.core.basic_auth import basic_auth
 from src.core.utils.schema import BaseResponse
@@ -42,7 +43,7 @@ async def upload(
 async def delete(
     _: Annotated[bool, Depends(basic_auth)],
     file_name: Annotated[str, Path()],
-    content_type: Annotated[ContentType, Query()],
+    content_type: Annotated[ContentTypeEnum, Query()],
     service: Annotated[FileService, Depends()],
 ) -> BaseResponse:
     """
@@ -64,7 +65,7 @@ async def delete(
 async def generate_url(
     _: Annotated[bool, Depends(basic_auth)],
     file_name: Annotated[str, Path()],
-    content_type: Annotated[ContentType, Query()],
+    content_type: Annotated[ContentTypeEnum, Query()],
     service: Annotated[FileService, Depends()],
 ) -> BaseResponse[GenerateURLResponse]:
     """
@@ -75,7 +76,8 @@ async def generate_url(
         code=status.HTTP_200_OK,
     )
 
-@router.post(
+
+@router.get(
     "/",
     status_code=status.HTTP_200_OK,
     name="get all",
@@ -85,11 +87,11 @@ async def generate_url(
 async def get_all(
     _: Annotated[bool, Depends(basic_auth)],
     service: Annotated[FileService, Depends()],
-) -> BaseResponse:
-    """
-    Generate a pre-signed download URL for a file in GCS.
-    """
+    page_token: Annotated[str | None, Query()] = None,
+    max_results: Annotated[int | None, Query(ge=1)] = 100,
+) -> BaseResponse[GetAllGCSData]:
+
     return BaseResponse(
-        data=await service.get_all(),
+        data=await service.get_all(page_token=page_token, max_results=max_results),
         code=status.HTTP_200_OK,
     )

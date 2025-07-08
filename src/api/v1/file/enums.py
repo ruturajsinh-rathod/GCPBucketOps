@@ -18,7 +18,7 @@ class FileStatusEnum(str, Enum):
     DELETED = "DELETED"
 
 
-class ContentType(str, Enum):
+class ContentTypeEnum(str, Enum):
     """
     Enumeration of common MIME content types for files.
 
@@ -37,10 +37,10 @@ class ContentType(str, Enum):
             Returns the typical file extension associated with the content type.
 
     Example:
-        >>> ContentType.JSON.value
+        >>> ContentTypeEnum.JSON.value
         'application/json'
 
-        >>> ContentType.JSON.file_extension()
+        >>> ContentTypeEnum.JSON.file_extension()
         '.json'
     """
 
@@ -101,7 +101,7 @@ class ContentType(str, Enum):
                  or an empty string if the MIME type is unrecognized.
 
         Example:
-            >>> ContentType.MP3.file_extension()
+            >>> ContentTypeEnum.MP3.file_extension()
             '.mp3'
         """
 

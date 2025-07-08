@@ -3,6 +3,7 @@ from src.constants.messages import (
     DB_FILE_NOT_FOUND,
     ERROR,
     EXPIRED_TOKEN,
+    GCS_DATA_FETCH_EXCEPTION,
     GCS_FILE_EXISTS,
     GCS_FILE_NOT_FOUND,
     GCS_REMOVE_EXCEPTION,
@@ -30,4 +31,5 @@ __all__ = [
     "DB_FILE_EXISTS",
     "DB_FILE_NOT_FOUND",
     "GENERATE_URL_EXCEPTION",
+    "GCS_DATA_FETCH_EXCEPTION",
 ]
