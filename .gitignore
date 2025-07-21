@@ -3,3 +3,4 @@
 *__pycache__*
 docker-compose-local.yml
 gcpbucketops.json
+gcp_function.py

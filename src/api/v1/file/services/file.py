@@ -5,6 +5,7 @@ from fastapi import Depends, UploadFile
 from google.cloud import storage
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import load_only
 
 from config.config import gcs_settings
 from database.db import db_session
@@ -20,7 +21,13 @@ from src.api.v1.file.exceptions import (
     GenerateURLException,
 )
 from src.api.v1.file.models.file import FileModel
-from src.api.v1.file.schemas import BaseGCSData, DownloadURLResponse, GetAllGCSData, UploadURLResponse
+from src.api.v1.file.schemas import (
+    BaseGCSData,
+    DownloadURLResponse,
+    ExpiredFilesResponse,
+    GetAllGCSData,
+    UploadURLResponse,
+)
 from src.core.gcs import BUCKET_NAME, client, upload_to_gcs
 from src.core.utils import core_logger
 
@@ -296,3 +303,49 @@ class FileService:
         )
 
         return UploadURLResponse(upload_url=url, valid_for_seconds=gcs_settings.EXPIRATION_SECONDS)
+
+    async def get_all_expired(self) -> ExpiredFilesResponse:
+        """
+        Retrieve all files that are expired and not yet marked as deleted.
+
+        A file is considered expired if its `expires_at` timestamp is earlier than the current UTC time.
+        This method excludes any files that have already been soft-deleted (i.e., have a non-null `deleted_at`).
+
+        Returns:
+            ExpiredFilesResponse: A response model containing the list of expired files with limited fields (id and file_name).
+        """
+        files = await self.session.scalars(
+            select(FileModel)
+            .options(load_only(FileModel.id, FileModel.file_name))
+            .where(
+                FileModel.expires_at < datetime.now(timezone.utc).replace(tzinfo=None),
+                FileModel.deleted_at.is_(None),
+            )
+        )
+        expired_files = files.all()
+
+        return ExpiredFilesResponse(expired_files=expired_files)
+
+    async def remove_all_expired(self, expired_files: list) -> dict:
+        """
+        Soft-delete the specified expired files by updating their status and deletion timestamp.
+
+        Args:
+            expired_files (list): A list of UUIDs corresponding to expired file records to be marked as deleted.
+
+        This method updates each matched file by:
+            - Setting its status to `FileStatusEnum.DELETED`
+            - Assigning the current UTC timestamp to `deleted_at`
+
+        Returns:
+            dict: A simple dictionary containing a success message.
+        """
+        files = await self.session.scalars(select(FileModel).where(FileModel.id.in_(expired_files)))
+
+        files = files.all()
+
+        for file in files:
+            file.status = FileStatusEnum.DELETED
+            file.deleted_at = datetime.now(timezone.utc).replace(tzinfo=None)
+
+        return {"message": "All expired files are deleted successfully!"}

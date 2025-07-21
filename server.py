@@ -1,7 +1,3 @@
-import asyncio
-from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator
-
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -11,7 +7,6 @@ from config.config import app_settings
 from src import constants
 from src.api.handlers import start_exception_handlers
 from src.api.v1 import router as v1_router
-from src.core.scheduler import periodic_cleanup
 
 
 def init_routers(_app: FastAPI) -> None:
@@ -48,21 +43,6 @@ def init_middlewares(_app: FastAPI) -> None:
     )
 
 
-# ------------------- LIFESPAN HANDLER -------------------
-@asynccontextmanager
-async def lifespan(_: FastAPI) -> AsyncGenerator[None, Any]:
-    """
-    Starts periodic cleanup task on app startup.
-    """
-    cleanup_task = asyncio.create_task(periodic_cleanup())
-    print("Cleanup scheduler started.")
-
-    yield
-
-    cleanup_task.cancel()
-    print("Cleanup scheduler stopped.")
-
-
 def create_app(debug: bool = False) -> FastAPI:
     """
     Create a Initialize the FastAPI app.
@@ -72,7 +52,6 @@ def create_app(debug: bool = False) -> FastAPI:
         version=app_settings.APP_VERSION,
         docs_url="/docs",
         redoc_url="/redoc" if debug else None,
-        lifespan=lifespan,
     )
     init_routers(_app)
     root_health_path(_app)
