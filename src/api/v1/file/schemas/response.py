@@ -102,3 +102,27 @@ class UploadURLResponse(CamelCaseModel):
 
     upload_url: str
     valid_for_seconds: int
+
+
+class ExpiredFileResponse(CamelCaseModel):
+    """
+    Represents a single expired file entry.
+
+    Attributes:
+        id (UUID): Unique identifier of the expired file.
+        file_name (str): Name of the expired file.
+    """
+
+    id: UUID
+    file_name: str
+
+
+class ExpiredFilesResponse(CamelCaseModel):
+    """
+    Response schema containing a list of expired files.
+
+    Attributes:
+        expired_files (list[ExpiredFileResponse]): A list of expired file entries with minimal metadata.
+    """
+
+    expired_files: list[ExpiredFileResponse]

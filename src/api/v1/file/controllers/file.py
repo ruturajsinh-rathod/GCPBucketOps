@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends, File, Path, Query, UploadFile, status
 
 from src.api.v1.file.enums import ContentTypeEnum
 from src.api.v1.file.schemas import DownloadURLResponse, FileResponse
-from src.api.v1.file.schemas.response import GetAllGCSData, UploadURLResponse
+from src.api.v1.file.schemas.request import RemoveExpiredFileRequest
+from src.api.v1.file.schemas.response import ExpiredFilesResponse, GetAllGCSData, UploadURLResponse
 from src.api.v1.file.services import FileService
 from src.core.basic_auth import basic_auth
 from src.core.utils.schema import BaseResponse
@@ -152,5 +153,68 @@ async def upload_url(
     """
     return BaseResponse(
         data=await service.signed_upload_url(file_name=file_name, content_type=content_type),
+        code=status.HTTP_200_OK,
+    )
+
+
+@router.get(
+    "/expired-files",
+    status_code=status.HTTP_200_OK,
+    name="get all expired files",
+    description="Get all expired files",
+    operation_id="get_all_expired_files",
+    include_in_schema=False,
+)
+async def get_all_expired(
+    _: Annotated[bool, Depends(basic_auth)], service: Annotated[FileService, Depends()]
+) -> BaseResponse[ExpiredFilesResponse]:
+    """
+    Retrieve a list of all expired files.
+
+    This endpoint checks for files that have exceeded their expiration threshold
+    and returns metadata for each expired file.
+
+    Authentication:
+        Requires basic authentication.
+
+    Returns:
+        BaseResponse[ExpiredFilesResponse]: A response containing the list of expired files.
+    """
+    return BaseResponse(
+        data=await service.get_all_expired(),
+        code=status.HTTP_200_OK,
+    )
+
+
+@router.post(
+    "/expired-files",
+    status_code=status.HTTP_200_OK,
+    name="remove all expired files",
+    description="Remove all expired files",
+    operation_id="remove_all_expired_files",
+    include_in_schema=False,
+)
+async def remove_all_expired(
+    _: Annotated[bool, Depends(basic_auth)],
+    request: RemoveExpiredFileRequest,
+    service: Annotated[FileService, Depends()],
+) -> BaseResponse:
+    """
+    Delete the specified expired files.
+
+    This endpoint accepts a list of expired file IDs and attempts to remove them
+    from the storage system.
+
+    Request Body:
+        - expired_files (List[UUID]): A list of UUIDs representing expired files to delete.
+
+    Authentication:
+        Requires basic authentication.
+
+    Returns:
+        BaseResponse: A response indicating success or failure of the deletion operation.
+    """
+    return BaseResponse(
+        data=await service.remove_all_expired(**request.model_dump()),
         code=status.HTTP_200_OK,
     )
