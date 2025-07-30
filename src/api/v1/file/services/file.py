@@ -123,7 +123,7 @@ class FileService:
             core_logger.info(f"File record for '{file.filename}' created in database.")
 
             await self.firestore_logger.log_event(
-                event_type="UPLOAD",
+                event_type=FileStatusEnum.UPLOADED,
                 file_name=file.filename,
                 status="SUCCESS",
                 metadata={"content_type": file.content_type, "size": file.size},
@@ -187,6 +187,13 @@ class FileService:
                 core_logger.warning(f"File record '{file_name}' does not exist in DB.")
                 raise DBFileDoesNotExistsException
 
+            await self.firestore_logger.log_event(
+                event_type=FileStatusEnum.DELETED,
+                file_name=file_name,
+                status="SUCCESS",
+                metadata={"content_type": file.content_type, "size": file.size},
+            )
+
             return {"message": f"File '{file_name}' deleted successfully."}
 
         except (DBFileDoesNotExistsException, GCSFileDoesNotExistsException):
@@ -224,6 +231,15 @@ class FileService:
                 version="v4",
                 expiration=timedelta(seconds=gcs_settings.EXPIRATION_SECONDS),
                 method="GET",
+            )
+
+            await self.firestore_logger.log_event(
+                event_type=FileStatusEnum.DOWNLOADED,
+                file_name=file_name,
+                status="SUCCESS",
+                metadata={
+                    "content_type": content_type,
+                },
             )
 
             return DownloadURLResponse(download_url=url, valid_for_seconds=gcs_settings.EXPIRATION_SECONDS)
