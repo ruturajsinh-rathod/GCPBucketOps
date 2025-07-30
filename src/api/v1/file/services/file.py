@@ -324,6 +324,8 @@ class FileService:
         )
         expired_files = files.all()
 
+        await self.remove_all_expired([file.id for file in expired_files])
+
         return ExpiredFilesResponse(expired_files=expired_files)
 
     async def remove_all_expired(self, expired_files: list) -> dict:

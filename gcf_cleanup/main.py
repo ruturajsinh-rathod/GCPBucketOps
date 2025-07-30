@@ -16,14 +16,6 @@ def fetch_expired_files() -> list[str]:
     return response.json().get("data").get("expiredFiles")
 
 
-def delete_from_database(expired_files: list) -> dict:
-    headers = {"accept": "application/json", "Authorization": AUTH_HEADER}
-    payload = {"expired_files": expired_files}
-    response = httpx.post(DELETE_FILE_API_URL, json=payload, timeout=10.0, headers=headers)
-    response.raise_for_status()
-    return response.json().get("data")
-
-
 def delete_from_gcs(filenames: list[str]) -> tuple[list[str], list[str]]:
     client = storage.Client()
     bucket = client.bucket(BUCKET_NAME)
@@ -49,7 +41,6 @@ def delete_expired_files(request):
             return {"message": "No expired files to delete."}, 200
 
         deleted, missing = delete_from_gcs(expired_files.get("fileName"))
-        delete_from_database(expired_files.get("id"))
 
         response = {
             "status": "success",
@@ -57,6 +48,7 @@ def delete_expired_files(request):
             "not_found_files": missing,
             "total_deleted": len(deleted),
         }
+        print({"expired_files": expired_files})
         print(response)
         return response, 200
 
