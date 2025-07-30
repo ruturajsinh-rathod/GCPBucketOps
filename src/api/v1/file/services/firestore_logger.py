@@ -3,6 +3,8 @@ from typing import Literal
 
 from google.cloud import firestore
 
+from src.api.v1.file.enums import FileStatusEnum
+
 
 class FirestoreLogger:
     def __init__(self):
@@ -11,7 +13,7 @@ class FirestoreLogger:
 
     async def log_event(
         self,
-        event_type: Literal["UPLOAD", "DOWNLOAD", "DELETE", "EXPIRE"],
+        event_type: FileStatusEnum,
         file_name: str,
         status: Literal["SUCCESS", "FAILURE"],
         metadata: dict = {},

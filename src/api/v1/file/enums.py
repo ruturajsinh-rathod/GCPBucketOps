@@ -16,6 +16,7 @@ class FileStatusEnum(str, Enum):
     UPLOADED = "UPLOADED"
     EXPIRED = "EXPIRED"
     DELETED = "DELETED"
+    DOWNLOADED = "DOWNLOADED"
 
 
 class ContentTypeEnum(str, Enum):
