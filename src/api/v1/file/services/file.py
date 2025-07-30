@@ -135,6 +135,12 @@ class FileService:
             raise
 
         except Exception as exc:
+            await self.firestore_logger.log_event(
+                event_type=FileStatusEnum.PENDING,
+                file_name=file.filename,
+                status="FAILURE",
+                metadata={"content_type": file.content_type, "size": file.size},
+            )
             core_logger.critical(f"Unexpected error while uploading file '{file.filename}': {exc}")
             raise GCSUploadException
 
@@ -197,6 +203,12 @@ class FileService:
             return {"message": f"File '{file_name}' deleted successfully."}
 
         except (DBFileDoesNotExistsException, GCSFileDoesNotExistsException):
+            await self.firestore_logger.log_event(
+                event_type=FileStatusEnum.PENDING,
+                file_name=file_name,
+                status="FAILURE",
+                metadata={"content_type": file.content_type, "size": file.size} if file else {},
+            )
             raise
 
         except Exception as exc:
@@ -245,6 +257,14 @@ class FileService:
             return DownloadURLResponse(download_url=url, valid_for_seconds=gcs_settings.EXPIRATION_SECONDS)
 
         except GCSFileDoesNotExistsException:
+            await self.firestore_logger.log_event(
+                event_type=FileStatusEnum.PENDING,
+                file_name=file_name,
+                status="FAILURE",
+                metadata={
+                    "content_type": content_type,
+                },
+            )
             raise
 
         except Exception as exc:
