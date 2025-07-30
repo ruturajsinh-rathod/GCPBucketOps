@@ -26,6 +26,7 @@ cachetools = "^5.3.2"
 fastapi-pagination = "^0.13.3"
 python-multipart = "^0.0.20"
 google-cloud-storage = "^3.2.0"
+google-cloud-firestore = "^2.21.0"
 
 [tool.black]
 line-length = 120

@@ -28,8 +28,13 @@ from src.api.v1.file.schemas import (
     GetAllGCSData,
     UploadURLResponse,
 )
+from src.api.v1.file.services.firestore_logger import FirestoreLogger
 from src.core.gcs import BUCKET_NAME, client, upload_to_gcs
 from src.core.utils import core_logger
+
+
+def get_firestore_logger() -> FirestoreLogger:
+    return FirestoreLogger()
 
 
 class FileService:
@@ -45,7 +50,11 @@ class FileService:
         session (AsyncSession): SQLAlchemy asynchronous session for database operations.
     """
 
-    def __init__(self, session: Annotated[AsyncSession, Depends(db_session)]) -> None:
+    def __init__(
+        self,
+        session: Annotated[AsyncSession, Depends(db_session)],
+        firestore_logger: Annotated[FirestoreLogger, Depends(get_firestore_logger)],
+    ) -> None:
         """
         Initialize the FileService with a database session.
 
@@ -53,6 +62,7 @@ class FileService:
             session (AsyncSession): An asynchronous SQLAlchemy session injected via dependency.
         """
         self.session = session
+        self.firestore_logger = firestore_logger
 
     async def upload(self, file: UploadFile) -> FileModel:
         """
@@ -111,6 +121,13 @@ class FileService:
             )
             self.session.add(file_obj)
             core_logger.info(f"File record for '{file.filename}' created in database.")
+
+            await self.firestore_logger.log_event(
+                event_type="UPLOAD",
+                file_name=file.filename,
+                status="SUCCESS",
+                metadata={"content_type": file.content_type, "size": file.size},
+            )
 
             return file_obj
 
