@@ -28,6 +28,7 @@ from src.api.v1.file.schemas import (
     GetAllGCSData,
     UploadURLResponse,
 )
+from src.api.v1.file.services.bigquery_logger import BigQueryLogger
 from src.api.v1.file.services.firestore_logger import FirestoreLogger
 from src.core.gcs import BUCKET_NAME, client, upload_to_gcs
 from src.core.utils import core_logger
@@ -35,6 +36,12 @@ from src.core.utils import core_logger
 
 def get_firestore_logger() -> FirestoreLogger:
     return FirestoreLogger()
+
+
+def get_bigquery_logger() -> BigQueryLogger:
+    return BigQueryLogger(
+        project_id=gcs_settings.PROJECT_ID, dataset_id=gcs_settings.DATASET_ID, table_id=gcs_settings.TABLE_ID
+    )
 
 
 class FileService:
@@ -54,6 +61,7 @@ class FileService:
         self,
         session: Annotated[AsyncSession, Depends(db_session)],
         firestore_logger: Annotated[FirestoreLogger, Depends(get_firestore_logger)],
+        bigquery_logger: Annotated[BigQueryLogger, Depends(get_bigquery_logger)],
     ) -> None:
         """
         Initialize the FileService with a database session.
@@ -63,6 +71,7 @@ class FileService:
         """
         self.session = session
         self.firestore_logger = firestore_logger
+        self.bigquery_logger = bigquery_logger
 
     async def upload(self, file: UploadFile) -> FileModel:
         """
@@ -123,6 +132,13 @@ class FileService:
             core_logger.info(f"File record for '{file.filename}' created in database.")
 
             await self.firestore_logger.log_event(
+                event_type=FileStatusEnum.UPLOADED,
+                file_name=file.filename,
+                status="SUCCESS",
+                metadata={"content_type": file.content_type, "size": file.size},
+            )
+
+            await self.bigquery_logger.log_event(
                 event_type=FileStatusEnum.UPLOADED,
                 file_name=file.filename,
                 status="SUCCESS",
@@ -200,14 +216,18 @@ class FileService:
                 metadata={"content_type": file.content_type, "size": file.size},
             )
 
+            await self.bigquery_logger.log_event(
+                event_type=FileStatusEnum.DELETED,
+                file_name=file_name,
+                status="SUCCESS",
+                metadata={"content_type": file.content_type, "size": file.size},
+            )
+
             return {"message": f"File '{file_name}' deleted successfully."}
 
         except (DBFileDoesNotExistsException, GCSFileDoesNotExistsException):
             await self.firestore_logger.log_event(
-                event_type=FileStatusEnum.PENDING,
-                file_name=file_name,
-                status="FAILURE",
-                metadata={"content_type": file.content_type, "size": file.size} if file else {},
+                event_type=FileStatusEnum.PENDING, file_name=file_name, status="FAILURE", metadata={}
             )
             raise
 
@@ -252,6 +272,13 @@ class FileService:
                 metadata={
                     "content_type": content_type,
                 },
+            )
+
+            await self.bigquery_logger.log_event(
+                event_type=FileStatusEnum.DOWNLOADED,
+                file_name=file_name,
+                status="SUCCESS",
+                metadata={"content_type": content_type},
             )
 
             return DownloadURLResponse(download_url=url, valid_for_seconds=gcs_settings.EXPIRATION_SECONDS)

@@ -73,6 +73,9 @@ class GCSSettings(BaseSettings):
     GOOGLE_APPLICATION_CREDENTIALS: str | None = None
     BUCKET_NAME: str | None = None
     EXPIRATION_SECONDS: int | None = None
+    PROJECT_ID: str | None = None
+    DATASET_ID: str | None = None
+    TABLE_ID: str | None = None
 
 
 class Settings(DatabaseSettings, JWTSettings, BasicAuthSettings, AppSettings, GCSSettings):
